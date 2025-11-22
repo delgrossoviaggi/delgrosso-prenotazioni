@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DELGROSSO VIAGGI & LIMOUSINE BUS - Prenotazioni (Firebase)</title>
+  <meta name="description" content="Sistema di prenotazione viaggi con autenticazione admin (Firebase).">
+  <style>
+    :root{--brand-1:#4f46e5;--brand-2:#7c3aed;--accent:#10b981;--danger:#ef4444;--muted:#6b7280;--bg:#f8fafc;--card:#ffffff;--radius:12px;--maxw:1100px;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;background:linear-gradient(180deg,var(--bg),#eef2ff);color:#0f172a;-webkit-font-smoothing:antialiased;padding:20px 14px;display:flex;justify-content:center;align-items:flex-start}
+    .app{width:100%;max-width:var(--maxw);background:var(--card);border-radius:18px;overflow:hidden;display:grid;grid-template-columns:1.6fr 1.1fr;min-height:520px;border:1px solid #e5e7f5}
+    header{grid-column:1 / -1;padding:18px 20px;background:linear-gradient(90deg,var(--brand-1),var(--brand-2));color:white;display:flex;flex-direction:column;gap:14px}
+    .header-top{text-align:center}
+    .brand-title{font-size:1.2rem;font-weight:900;display:inline-flex;align-items:center;justify-content:center;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.35)}
+    main{padding:18px 16px 20px}aside.sidebar{background:linear-gradient(180deg,#f9fafb,#f8fafc);padding:18px 16px 20px;border-left:1px solid #e5e7f5}
+    .section-title{font-weight:700;margin-bottom:10px;color:#0b1220;font-size:0.95rem}
+    input,select,button{font-family:inherit}
+    /* keep rest of original styles minimal for brevity */
+    .hidden{display:none}
+    .btn{display:inline-block;padding:9px 12px;border-radius:999px;border:0;background:linear-gradient(90deg,var(--brand-1),var(--brand-2));color:white;font-weight:700;cursor:pointer}
+    .btn.secondary{background:transparent;color:var(--brand-1);border:1px solid #dde4f2}
+    .login-panel{max-width:380px;margin:8px auto;padding:12px;border-radius:12px;background:#fff;border:1px solid #eef2ff}
+    .small{font-size:0.85rem;color:var(--muted)}
+    .seats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .seat{width:42px;height:42px;border-radius:9px;border:1px solid #dde4f2;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .seat.occupied{background:var(--danger);color:white}
+    .seat.selected{background:var(--brand-1);color:white}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Sistema prenotazioni autobus Delgrosso Viaggi & Limousine Bus">
+    <header>
+      <div class="header-top">
+        <div class="brand-title">DELGROSSO VIAGGI & LIMOUSINE BUS</div>
+        <div class="small">Sistema di prenotazione con area admin protetta</div>
+      </div>
+    </header>
+
+    <main>
+      <section id="public-panel">
+        <div class="section-title">Crea una nuova prenotazione</div>
+        <!-- simplified public booking form (similar to original) -->
+        <form id="bookingForm">
+          <div>
+            <label>Nome e Cognome</label>
+            <input id="passengerName" required placeholder="Mario Rossi">
+          </div>
+          <div>
+            <label>Email</label>
+            <input id="passengerEmail" type="email" required placeholder="esempio@mail.com">
+          </div>
+          <div>
+            <label>Viaggio</label>
+            <select id="selectedTrip"></select>
+          </div>
+          <div>
+            <label>Data</label>
+            <input id="travelDate" type="date">
+          </div>
+          <div class="seats-grid" id="seatsGrid"></div>
+          <div style="margin-top:8px">
+            <button class="btn" type="submit">Conferma prenotazione</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="admin-panel" class="hidden">
+        <div class="section-title">Area Admin</div>
+        <div id="admin-content">
+          <div style="margin-bottom:8px">
+            <button id="signOutBtn" class="btn secondary">Esci</button>
+          </div>
+          <div>
+            <h4 class="small">Gestione viaggi</h4>
+            <input id="newTripName" placeholder="Nome viaggio">
+            <select id="newTripBusType"><option value="GT53">GT - 53 posti</option><option value="GT63">GT - 63 posti</option></select>
+            <input id="newTripPrice" type="number" placeholder="Prezzo">
+            <button id="addTripBtn" class="btn">Aggiungi</button>
+          </div>
+          <div style="margin-top:10px">
+            <h4 class="small">Prenotazioni</h4>
+            <div id="bookingsList"></div>
+            <div style="margin-top:8px"><button id="exportCsv" class="btn secondary">Esporta CSV</button></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="sidebar">
+      <div class="section-title">Accesso Admin</div>
+      <div id="authBox">
+        <div class="login-panel">
+          <div class="small">Accedi con email e password</div>
+          <input id="authEmail" placeholder="Email" value="delgrossoviaggi@blu.it">
+          <input id="authPassword" placeholder="Password" value="Limobus@25" type="password">
+          <div style="margin-top:8px">
+            <button id="signInBtn" class="btn">Accedi</button>
+          </div>
+          <div class="small" style="margin-top:8px">Solo l'email admin potrà accedere all'area di gestione.</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Firebase scripts (CDN). Replace firebaseConfig below with your project config -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    /***** CONFIG - =======> IMPORTANT: replace with your Firebase project's config <=========
+      How to get the config:
+      1) Create a Firebase project at https://console.firebase.google.com/
+      2) Enable Authentication -> Sign-in method -> Email/Password
+      3) Create a Firestore database (in test mode for first setup)
+      4) From Project settings copy the firebaseConfig object and paste below
+    **********************************************************/
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0B1q_15KBzXZi2FI1pDvwqvZl_CNYBU0",
+      authDomain: "delgrossoviaggi.firebaseapp.com",
+      projectId: "delgrossoviaggi",
+      storageBucket: "delgrossoviaggi.firebasestorage.app",
+      messagingSenderId: "210980718576",
+      appId: "1:210980718576:web:a1661e89bf51a7e0727f35"
+    };
+
+    // Admin email you provided
+    const ADMIN_EMAIL = 'delgrossoviaggi@blu.it';
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // UI elements
+    const signInBtn = document.getElementById('signInBtn');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authBox = document.getElementById('authBox');
+    const adminPanel = document.getElementById('admin-panel');
+    const publicPanel = document.getElementById('public-panel');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const bookingsList = document.getElementById('bookingsList');
+    const exportCsvBtn = document.getElementById('exportCsv');
+
+    const selectedTrip = document.getElementById('selectedTrip');
+    const seatsGrid = document.getElementById('seatsGrid');
+    const bookingForm = document.getElementById('bookingForm');
+
+    // Simple in-memory state until Firestore loads
+    let trips = [];
+    let bookings = [];
+    let selectedSeats = [];
+
+    // AUTH: sign in
+    signInBtn.addEventListener('click', async ()=>{
+      const email = authEmail.value.trim();
+      const pwd = authPassword.value;
+      if(!email || !pwd){ alert('Inserisci email e password'); return; }
+      try{
+        // Try sign in; if not exists, create account automatically (first time)
+        await auth.signInWithEmailAndPassword(email,pwd);
+      }catch(err){
+        if(err.code === 'auth/user-not-found'){
+          try{
+            await auth.createUserWithEmailAndPassword(email,pwd);
+            // created account
+          }catch(e){ alert('Errore creazione account: '+e.message); return; }
+        }else{ alert('Errore login: '+err.message); return; }
+      }
+    });
+
+    // Auth state listener
+    auth.onAuthStateChanged(async user=>{
+      if(user && user.email === ADMIN_EMAIL){
+        // show admin panel
+        adminPanel.classList.remove('hidden');
+        authBox.style.display = 'none';
+        // load data from Firestore
+        await loadTrips();
+        await loadBookings();
+        renderAdmin();
+      }else{
+        adminPanel.classList.add('hidden');
+        authBox.style.display = 'block';
+      }
+    });
+
+    signOutBtn.addEventListener('click',()=>auth.signOut());
+
+    // Firestore helpers
+    async function loadTrips(){
+      const snap = await db.collection('trips').get();
+      trips = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderTripOptions();
+    }
+
+    function renderTripOptions(){
+      selectedTrip.innerHTML = '<option value="">-- Seleziona --</option>';
+      trips.forEach(t=>{
+        const opt = document.createElement('option');
+        opt.value = t.id; opt.textContent = t.name + ' (' + (t.seats||0) + ' posti - €' + Number(t.price||0).toFixed(2) + ')';
+        selectedTrip.appendChild(opt);
+      });
+      renderSeats();
+    }
+
+    async function loadBookings(){
+      const snap = await db.collection('bookings').orderBy('bookingDate','desc').get();
+      bookings = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderAdmin();
+    }
+
+    // Admin render
+    function renderAdmin(){
+      bookingsList.innerHTML='';
+      if(bookings.length===0){ bookingsList.innerHTML='<div class="small">Nessuna prenotazione</div>'; return; }
+      bookings.forEach(b=>{
+        const div = document.createElement('div');
+        div.style.padding='8px'; div.style.border='1px solid #eef2ff'; div.style.marginBottom='6px';
+        div.innerHTML = '<strong>'+b.passengerName+'</strong><div class="small">'+b.tripName+' — posti '+(b.seats||[]).join(', ')+'</div>';
+        const del = document.createElement('button'); del.className='btn secondary'; del.textContent='Elimina'; del.style.marginTop='6px';
+        del.addEventListener('click',async ()=>{ if(confirm('Eliminare?')){ await db.collection('bookings').doc(b.id).delete(); await loadBookings(); } });
+        div.appendChild(del);
+        bookingsList.appendChild(div);
+      });
+    }
+
+    // Add trip
+    document.getElementById('addTripBtn').addEventListener('click',async ()=>{
+      const name = document.getElementById('newTripName').value.trim();
+      const busType = document.getElementById('newTripBusType').value;
+      const price = parseFloat(document.getElementById('newTripPrice').value) || 0;
+      if(!name){ alert('Nome viaggio richiesto'); return; }
+      const seats = busType==='GT63'?63:53;
+      const doc = await db.collection('trips').add({name,price,busType,seats});
+      await loadTrips();
+      alert('Viaggio aggiunto');
+    });
+
+    // Booking form (public)
+    bookingForm.addEventListener('submit',async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById('passengerName').value.trim();
+      const email = document.getElementById('passengerEmail').value.trim();
+      const tripId = selectedTrip.value; const trip = trips.find(t=>t.id===tripId);
+      const travelDate = document.getElementById('travelDate').value;
+      if(!trip || selectedSeats.length===0){ alert('Seleziona viaggio e posti'); return; }
+      const booking = {tripId,tripName:trip.name,seats:selectedSeats,passengerName:name,passengerEmail:email,travelDate,bookingDate:new Date()};
+      const doc = await db.collection('bookings').add(booking);
+      alert('Prenotazione registrata. Grazie!');
+      selectedSeats=[]; renderSeats();
+    });
+
+    // Seats UI
+    selectedTrip.addEventListener('change',renderSeats);
+    function renderSeats(){
+      seatsGrid.innerHTML=''; selectedSeats=[];
+      const tripId = selectedTrip.value; if(!tripId) return;
+      const trip = trips.find(t=>t.id===tripId); if(!trip) return;
+      // compute occupied seats from bookings
+      const occ = bookings.filter(b=>b.tripId===tripId).flatMap(b=>b.seats||[]);
+      for(let i=1;i<=trip.seats;i++){
+        const b = document.createElement('div'); b.className='seat'; b.textContent=i;
+        if(occ.includes(i)){ b.classList.add('occupied'); }
+        b.addEventListener('click',()=>{
+          if(b.classList.contains('occupied')) return;
+          if(b.classList.contains('selected')){ b.classList.remove('selected'); selectedSeats = selectedSeats.filter(x=>x!==i); }
+          else{ b.classList.add('selected'); selectedSeats.push(i); }
+        });
+        seatsGrid.appendChild(b);
+      }
+    }
+
+    // Export CSV (admin)
+    exportCsvBtn.addEventListener('click',()=>{
+      if(!bookings || bookings.length===0){ alert('Nessuna prenotazione'); return; }
+      const header = ['ID','Viaggio','Passeggero','Email','Posti','Data Viaggio','Data Prenotazione'];
+      const rows = bookings.map(b=>[b.id,b.tripName,b.passengerName,b.passengerEmail,(b.seats||[]).join('-'),b.travelDate,(b.bookingDate && b.bookingDate.toDate)?b.bookingDate.toDate():b.bookingDate]);
+      const csv = [header,...rows].map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(';')).join('\n');
+      const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='prenotazioni.csv'; document.body.appendChild(a); a.click(); a.remove();
+    });
+
+    // Initial quick check: try to load trips/bookings (will work once firebaseConfig is replaced)
+    (async ()=>{
+      try{ await loadTrips(); await loadBookings(); }catch(e){ console.log('Attend setup Firebase config and enable Auth/Firestore',e); }
+    })();
+  </script>
+
+  <!-- NOTES: To finish setup
+     1) Create Firebase project, enable Email/Password auth, create Firestore database
+     2) Paste your project's firebaseConfig object where indicated
+     3) Deploy the file to GitHub Pages
+     4) (Optional) secure Firestore rules to allow reads/writes only to authenticated admin for sensitive actions
+  -->
+</body>
+</html>
