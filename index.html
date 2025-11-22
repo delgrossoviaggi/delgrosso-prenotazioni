@@ -434,7 +434,6 @@
     </header>
 
     <main>
-      <!-- PANNELLO: NUOVA PRENOTAZIONE -->
       <section id="panel-booking" class="panel active" role="region" aria-labelledby="tab-booking">
         <div class="section-title">Crea una nuova prenotazione</div>
 
@@ -500,9 +499,8 @@
         </form>
       </section>
 
-      <!-- PANNELLO: LISTA PRENOTAZIONI -->
       <section id="panel-bookings" class="panel" role="region" aria-labelledby="tab-bookings">
-        <div class="section-title">Le mie prenotazioni</div>
+        <div class="section-title">Le mie prenotazioni (Accesso Amministratore)</div>
 
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
           <input id="filterEmail" class="pill-input" placeholder="Filtra per email">
@@ -512,10 +510,11 @@
         <div id="bookingsListMain" class="bookings-list" aria-live="polite"></div>
       </section>
 
-      <!-- PANNELLO: GESTIONE VIAGGI -->
       <section id="panel-admin" class="panel" role="region" aria-labelledby="tab-admin">
-        <div class="section-title">Gestione viaggi</div>
+        <div class="section-title">Gestione viaggi (Accesso Amministratore)</div>
 
+        <button class="btn secondary" id="adminLogoutBtn" type="button" style="margin-bottom:10px;">Logout Amministratore</button>
+        
         <div style="background:#f8fafc;border-radius:12px;border:1px solid #e5e7f5;padding:10px;margin-bottom:10px">
           <div class="row">
             <div class="field">
@@ -582,6 +581,14 @@
     let trips = [];
     let bookings = [];
     let selectedSeats = [];
+
+    // ===========================================
+    // ---- SICUREZZA AMMINISTRATORE ----
+    // ===========================================
+    const ADMIN_PIN = '1234'; // PIN per l'accesso amministrativo (CAMBIARE IN PRODUZIONE)
+    let isAdminLoggedIn = false;
+    // -------------------------------------------------
+
 
     const selectedTripEl = document.getElementById('selectedTrip');
     const seatsGrid = document.getElementById('seatsGrid');
@@ -713,6 +720,27 @@
       alertEl.appendChild(div);
       setTimeout(()=>{ if(alertEl.contains(div)) alertEl.removeChild(div); },4000);
     }
+    
+    // ====================================================
+    // ---- FUNZIONE DI LOGIN AMMINISTRATORE ----
+    // ====================================================
+    function promptForAdminLogin(callback){
+      if(isAdminLoggedIn){
+        callback();
+        return;
+      }
+
+      const pin = prompt("🔐 Inserisci il PIN Amministratore per accedere:");
+      if(pin === ADMIN_PIN){
+        isAdminLoggedIn = true;
+        showAlert('Accesso Amministratore effettuato','success');
+        callback();
+      }else if(pin !== null && pin.trim() !== ''){
+        showAlert('PIN Amministratore errato. Accesso negato.','error');
+      }
+      // Se l'utente annulla o lascia vuoto, non fare nulla e non cambiare pannello.
+    }
+    // --------------------------------------------------------
 
     bookingForm.addEventListener('submit',function(e){
       e.preventDefault();
@@ -958,12 +986,27 @@
       showAlert('Esportazione CSV completata','success');
     });
 
-    // TABS
+    // ==========================================================
+    // TABS (Logica modificata per il check amministratore)
+    // ==========================================================
     tabs.forEach(t=>{
       t.addEventListener('click',function(){
-        tabs.forEach(x=>x.removeAttribute('aria-current'));
-        this.setAttribute('aria-current','true');
-        switchPanel(this.dataset.target);
+        const target = this.dataset.target;
+
+        const performSwitch = () => {
+          // Imposta il tab attivo e cambia pannello
+          tabs.forEach(x=>x.removeAttribute('aria-current'));
+          this.setAttribute('aria-current','true');
+          switchPanel(target);
+        };
+
+        if(target === 'booking'){
+          // La sezione Nuova Prenotazione è sempre accessibile
+          performSwitch();
+        } else {
+          // Le sezioni Prenotazioni e Gestione Viaggi sono protette
+          promptForAdminLogin(performSwitch);
+        }
       });
     });
 
@@ -972,6 +1015,22 @@
       const target = document.getElementById('panel-'+name);
       if(target) target.classList.add('active');
     }
+
+    // ==================================================
+    // LOGOUT AMMINISTRATORE
+    // ==================================================
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    if (adminLogoutBtn) {
+        adminLogoutBtn.addEventListener('click',function(){
+            if(isAdminLoggedIn){
+                isAdminLoggedIn = false;
+                showAlert('Logout Amministratore effettuato','success');
+                // Torna al pannello Prenotazione e imposta il tab 'booking' come corrente
+                document.getElementById('tab-booking').click();
+            }
+        });
+    }
+    // ----------------------------------------------------
 
     // INIT
     loadInitialData();
