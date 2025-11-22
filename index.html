@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DELGROSSO VIAGGI & LIMOUSINE BUS - Prenotazioni</title>
+  <meta name="description" content="Sistema di prenotazione viaggi per Delgrosso Viaggi & Limousine Bus, responsive e accessibile da tutti i dispositivi.">
+  <style>
+    :root{
+      --brand-1:#4f46e5; /* indigo */
+      --brand-2:#7c3aed; /* purple */
+      --accent:#10b981; /* green */
+      --danger:#ef4444; /* red */
+      --muted:#6b7280;
+      --bg: #f8fafc;
+      --card:#ffffff;
+      --shadow: 0 8px 24px rgba(15,23,42,0.08);
+      --radius:12px;
+      --maxw:1100px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,var(--bg),#eef2ff);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      padding:20px 14px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+
+    .app{
+      width:100%;
+      max-width:var(--maxw);
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:var-shadow;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns:1.6fr 1.1fr;
+      min-height:520px;
+      border:1px solid #e5e7f5;
+    }
+
+    header{
+      grid-column:1 / -1;
+      padding:18px 20px;
+      background:linear-gradient(90deg,var(--brand-1),var(--brand-2));
+      color:white;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .header-top{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:6px;
+    }
+
+    .header-badge{
+      letter-spacing:0.22em;
+      text-transform:uppercase;
+      font-size:0.65rem;
+      color:rgba(239,246,255,0.9);
+    }
+
+    .brand-title{
+      font-size:1.4rem;
+      font-weight:900;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.12);
+      border:1px solid rgba(255,255,255,0.35);
+      backdrop-filter:blur(6px);
+    }
+
+    .brand-title span:first-child{
+      font-weight:900;
+    }
+    .brand-title span:last-child{
+      font-weight:400;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      font-size:0.7rem;
+      margin-left:6px;
+    }
+
+    .header-subtitle{
+      font-size:0.8rem;
+      color:rgba(239,246,255,0.95);
+    }
+
+    .header-bottom{
+      display:flex;
+      justify-content:center;
+      margin-top:4px;
+    }
+
+    nav.tabs{
+      display:inline-flex;
+      gap:8px;
+      padding:4px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.22);
+      backdrop-filter:blur(4px);
+    }
+
+    .tab{
+      background:transparent;
+      border:0;
+      color:rgba(255,255,255,0.8);
+      padding:6px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:0.8rem;
+      transition:all .15s ease-out;
+    }
+    .tab[aria-current="true"]{
+      background:white;
+      color:var(--brand-1);
+      box-shadow:0 6px 18px rgba(15,23,42,0.35);
+    }
+
+    main{
+      padding:18px 16px 20px;
+    }
+
+    aside.sidebar{
+      background:linear-gradient(180deg,#f9fafb,#f8fafc);
+      padding:18px 16px 20px;
+      border-left:1px solid #e5e7f5;
+    }
+
+    .section-title{
+      font-weight:700;
+      margin-bottom:10px;
+      color:#0b1220;
+      font-size:0.95rem;
+    }
+
+    form .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+    }
+
+    label{
+      font-size:0.8rem;
+      color:var(--muted);
+      margin-bottom:5px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    select,
+    input[type="number"]{
+      padding:9px 10px;
+      border-radius:9px;
+      border:1px solid #dde4f2;
+      background:white;
+      font-size:0.9rem;
+    }
+    input:focus,select:focus{
+      outline:2px solid rgba(79,70,229,0.18);
+      border-color:var(--brand-1);
+    }
+
+    .seats-panel{
+      margin-top:10px;
+      background:#f8fafc;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid #e5e7f5;
+    }
+    .seats-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      justify-items:center;
+      margin-top:6px;
+    }
+    .seat{
+      width:42px;
+      height:42px;
+      border-radius:9px;
+      border:1px solid #dde4f2;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      font-size:0.8rem;
+      cursor:pointer;
+      background:white;
+      transition:all .1s ease-out;
+    }
+    .seat[aria-occupied="true"]{
+      background:var(--danger);
+      color:white;
+      cursor:not-allowed;
+      opacity:0.85;
+    }
+    .seat[aria-selected="true"]{
+      background:var(--brand-1);
+      color:white;
+      transform:scale(1.05);
+      border-color:var(--brand-1);
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      margin:8px 0 4px;
+      font-size:0.78rem;
+      color:var(--muted);
+    }
+    .legend .box{
+      width:16px;height:16px;
+      border-radius:4px;
+      border:1px solid #dde4f2;
+    }
+
+    .selected-display{
+      padding:8px 10px;
+      border-radius:9px;
+      background:white;
+      border:1px solid #e5e7f5;
+      font-weight:600;
+      font-size:0.8rem;
+      flex:1;
+    }
+
+    .btn{
+      display:inline-block;
+      padding:9px 12px;
+      border-radius:999px;
+      border:0;
+      background:linear-gradient(90deg,var(--brand-1),var(--brand-2));
+      color:white;
+      font-weight:700;
+      cursor:pointer;
+      font-size:0.85rem;
+      transition:all .12s ease-out;
+    }
+    .btn:hover{
+      filter:brightness(1.05);
+      transform:translateY(-1px);
+      box-shadow:0 8px 18px rgba(79,70,229,0.35);
+    }
+    .btn.secondary{
+      background:transparent;
+      color:var(--brand-1);
+      border:1px solid #dde4f2;
+      box-shadow:none;
+    }
+    .btn.secondary:hover{
+      background:#eef2ff;
+      transform:none;
+      box-shadow:none;
+    }
+    .btn.block{
+      width:100%;
+      border-radius:12px;
+    }
+
+    .stats{
+      display:flex;
+      gap:10px;
+      flex-direction:column;
+    }
+    .stat-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .stat-card{
+      background:white;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid #e5e7f5;
+      box-shadow:0 4px 12px rgba(15,23,42,0.04);
+    }
+    .stat-card .value{
+      font-size:1.2rem;
+      font-weight:800;
+    }
+    .stat-card .label{
+      font-size:0.75rem;
+      color:var(--muted);
+    }
+
+    .bookings-list{
+      margin-top:10px;
+      max-height:52vh;
+      overflow:auto;
+    }
+    .booking-card{
+      padding:9px;
+      border-radius:9px;
+      border-left:4px solid var(--brand-1);
+      background:#fff;
+      margin-bottom:8px;
+      box-shadow:0 4px 10px rgba(15,23,42,0.04);
+    }
+    .booking-card h4{
+      margin:0;
+      font-size:0.9rem;
+      font-weight:700;
+    }
+    .booking-card p{
+      margin:2px 0;
+      font-size:0.75rem;
+      color:var(--muted);
+    }
+
+    .trip-card{
+      padding:8px;
+      border-radius:9px;
+      border-left:4px solid var(--brand-2);
+      background:#fff;
+      margin-bottom:8px;
+      box-shadow:0 4px 10px rgba(15,23,42,0.03);
+    }
+
+    .pill-input{
+      border-radius:999px;
+      padding:7px 10px;
+      border:1px solid #dde4f2;
+      font-size:0.78rem;
+      flex:1;
+    }
+
+    #alert{
+      min-height:28px;
+      margin-bottom:10px;
+      font-size:0.8rem;
+    }
+
+    @media (max-width:1000px){
+      .app{
+        grid-template-columns:1fr;
+        min-height:unset;
+      }
+      aside.sidebar{
+        border-left:none;
+        border-top:1px solid #e5e7f5;
+      }
+      header{
+        padding:16px 14px;
+      }
+    }
+
+    @media (max-width:640px){
+      body{
+        padding:12px 8px;
+      }
+      .brand-title{
+        font-size:1.05rem;
+      }
+      .brand-title span:last-child{
+        font-size:0.6rem;
+      }
+      nav.tabs{
+        width:100%;
+        justify-content:space-between;
+      }
+      .tab{
+        flex:1;
+        text-align:center;
+        font-size:0.7rem;
+        padding:6px 4px;
+      }
+      form .row{
+        grid-template-columns:1fr;
+      }
+      .seats-grid{
+        grid-template-columns:repeat(4,1fr);
+      }
+      .seat{
+        width:38px;height:38px;
+      }
+    }
+
+    .seat:focus{
+      outline:3px solid rgba(79,70,229,0.25);
+      transform:translateY(-1px);
+    }
+
+    .panel{display:none;}
+    .panel.active{display:block;}
+
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Sistema prenotazioni autobus Delgrosso Viaggi & Limousine Bus">
+    <header>
+      <div class="header-top">
+        <div class="header-badge">Travel &amp; Luxury Coach</div>
+        <div class="brand-title">
+          <span>DELGROSSO</span>
+          <span>VIAGGI &amp; LIMOUSINE BUS</span>
+        </div>
+        <div class="header-subtitle">
+          Sistema di prenotazione viaggi semplice, veloce e perfettamente ottimizzato per ogni dispositivo.
+        </div>
+      </div>
+      <div class="header-bottom">
+        <nav class="tabs" aria-label="Sezioni">
+          <button class="tab" id="tab-booking" aria-current="true" data-target="booking">Nuova Prenotazione</button>
+          <button class="tab" id="tab-bookings" data-target="bookings">Prenotazioni</button>
+          <button class="tab" id="tab-admin" data-target="admin">Gestione Viaggi</button>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- PANNELLO: NUOVA PRENOTAZIONE -->
+      <section id="panel-booking" class="panel active" role="region" aria-labelledby="tab-booking">
+        <div class="section-title">Crea una nuova prenotazione</div>
+
+        <div id="alert" role="status" aria-live="polite"></div>
+
+        <form id="bookingForm">
+          <div class="row">
+            <div class="field">
+              <label for="passengerName">Nome e Cognome <span aria-hidden="true" style="color:var(--danger)">*</span></label>
+              <input id="passengerName" name="passengerName" type="text" required autocomplete="name" placeholder="Es. Mario Rossi">
+            </div>
+            <div class="field">
+              <label for="passengerEmail">Email</label>
+              <input id="passengerEmail" name="passengerEmail" type="email" required autocomplete="email" placeholder="esempio@mail.com">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="phoneNumber">Telefono</label>
+              <input id="phoneNumber" name="phoneNumber" type="tel" inputmode="tel" placeholder="3XX XXX XXXX">
+            </div>
+            <div class="field">
+              <label for="selectedTrip">Viaggio</label>
+              <select id="selectedTrip" name="selectedTrip" required aria-required="true"></select>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:10px">
+            <label for="travelDate">Data di viaggio</label>
+            <input id="travelDate" name="travelDate" type="date" required>
+          </div>
+
+          <div class="seats-panel" aria-live="polite">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+              <strong style="font-size:0.85rem">Seleziona i posti</strong>
+              <small class="note" style="color:var(--muted);font-size:0.7rem">Tocca o usa Invio/Spazio per selezionare</small>
+            </div>
+
+            <div class="legend" aria-hidden="false">
+              <span style="display:flex;gap:5px;align-items:center">
+                <span class="box" style="background:white;border:1px solid #dde4f2"></span> Disponibile
+              </span>
+              <span style="display:flex;gap:5px;align-items:center">
+                <span class="box" style="background:var(--brand-1);border-color:var(--brand-1)"></span> Selezionato
+              </span>
+              <span style="display:flex;gap:5px;align-items:center">
+                <span class="box" style="background:var(--danger);border-color:var(--danger)"></span> Occupato
+              </span>
+            </div>
+
+            <div id="seatsGrid" class="seats-grid" role="grid" aria-label="Mappa posti"></div>
+
+            <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div class="selected-display" id="selectedSeatsDisplay">Nessun posto selezionato</div>
+              <button class="btn secondary" type="button" id="clearSeats">Cancella</button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <button type="submit" class="btn block">Conferma prenotazione</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- PANNELLO: LISTA PRENOTAZIONI -->
+      <section id="panel-bookings" class="panel" role="region" aria-labelledby="tab-bookings">
+        <div class="section-title">Le mie prenotazioni</div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <input id="filterEmail" class="pill-input" placeholder="Filtra per email">
+          <button class="btn secondary" id="exportCsvBtn" type="button">Esporta CSV</button>
+        </div>
+
+        <div id="bookingsListMain" class="bookings-list" aria-live="polite"></div>
+      </section>
+
+      <!-- PANNELLO: GESTIONE VIAGGI -->
+      <section id="panel-admin" class="panel" role="region" aria-labelledby="tab-admin">
+        <div class="section-title">Gestione viaggi</div>
+
+        <div style="background:#f8fafc;border-radius:12px;border:1px solid #e5e7f5;padding:10px;margin-bottom:10px">
+          <div class="row">
+            <div class="field">
+              <label for="newTripName">Nome viaggio</label>
+              <input id="newTripName" placeholder="Es. Firenze → Venezia">
+            </div>
+            <div class="field">
+              <label for="newTripPrice">Prezzo (€)</label>
+              <input id="newTripPrice" type="number" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="newTripBusType">Tipo autobus</label>
+              <select id="newTripBusType">
+                <option value="">-- Seleziona --</option>
+                <option value="GT53">GT - 53 posti</option>
+                <option value="GT63">GT - 63 posti</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:6px">
+            <button class="btn" id="addTrip" type="button">Aggiungi viaggio</button>
+          </div>
+        </div>
+
+        <div id="tripsList"></div>
+      </section>
+    </main>
+
+    <aside class="sidebar" role="complementary">
+      <div class="section-title">Statistiche &amp; ultime prenotazioni</div>
+
+      <div class="stats">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="value" id="totalBookings">0</div>
+            <div class="label">Prenotazioni totali</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="nextTripCount">-</div>
+            <div class="label">Prossimo viaggio</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top:12px;margin-bottom:4px">Ultime prenotazioni</div>
+        <div class="bookings-list" id="bookingsListSide" aria-live="polite"></div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // ---- DATI E COSTANTI ----
+    const busTypes = {
+      'GT53': {name:'Pullman GT - 53 Posti', seats:53},
+      'GT63': {name:'Pullman GT - 63 Posti', seats:63}
+    };
+
+    const STORAGE_KEYS = {
+      trips: 'delgrosso_trips',
+      bookings: 'delgrosso_bookings'
+    };
+
+    let trips = [];
+    let bookings = [];
+    let selectedSeats = [];
+
+    const selectedTripEl = document.getElementById('selectedTrip');
+    const seatsGrid = document.getElementById('seatsGrid');
+    const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
+    const bookingForm = document.getElementById('bookingForm');
+    const alertEl = document.getElementById('alert');
+    const tabs = document.querySelectorAll('.tab');
+
+    function loadInitialData(){
+      try{
+        const storedTrips = localStorage.getItem(STORAGE_KEYS.trips);
+        const storedBookings = localStorage.getItem(STORAGE_KEYS.bookings);
+        if(storedTrips){
+          trips = JSON.parse(storedTrips);
+        }else{
+          trips = [
+            {id:1,name:'Milano → Roma',busType:'GT53',price:35},
+            {id:2,name:'Roma → Napoli',busType:'GT63',price:28}
+          ];
+        }
+        if(storedBookings){
+          bookings = JSON.parse(storedBookings);
+        }else{
+          bookings = [];
+        }
+      }catch(e){
+        trips = [
+          {id:1,name:'Milano → Roma',busType:'GT53',price:35},
+          {id:2,name:'Roma → Napoli',busType:'GT63',price:28}
+        ];
+        bookings = [];
+      }
+    }
+
+    function save(){
+      localStorage.setItem(STORAGE_KEYS.trips, JSON.stringify(trips));
+      localStorage.setItem(STORAGE_KEYS.bookings, JSON.stringify(bookings));
+    }
+
+    function renderTripOptions(){
+      selectedTripEl.innerHTML = '<option value="">-- Seleziona un viaggio --</option>';
+      trips.forEach(t=>{
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        const seats = busTypes[t.busType] ? busTypes[t.busType].seats : '-';
+        opt.textContent = t.name + ' (' + seats + ' posti - €' + Number(t.price || 0).toFixed(2) + ')';
+        selectedTripEl.appendChild(opt);
+      });
+    }
+
+    function getCurrentTrip(){
+      const id = parseInt(selectedTripEl.value);
+      if(!id) return null;
+      return trips.find(t=>t.id === id) || null;
+    }
+
+    function renderSeats(){
+      const trip = getCurrentTrip();
+      seatsGrid.innerHTML = '';
+      selectedSeats = [];
+      if(!trip){
+        updateSelectedDisplay();
+        return;
+      }
+      const seatsCount = busTypes[trip.busType] ? busTypes[trip.busType].seats : 0;
+      const occupied = bookings.filter(b=>b.tripId===trip.id).flatMap(b=>b.seats);
+
+      for(let i=1;i<=seatsCount;i++){
+        const btn = document.createElement('button');
+        btn.className='seat';
+        btn.type='button';
+        btn.textContent=i;
+        btn.setAttribute('role','gridcell');
+        btn.tabIndex=0;
+        if(occupied.includes(i)){
+          btn.setAttribute('aria-occupied','true');
+          btn.disabled = true;
+        }
+        btn.addEventListener('click',()=>toggleSeat(i,btn));
+        btn.addEventListener('keydown',(e)=>{
+          if(e.key==='Enter' || e.key===' '){
+            e.preventDefault();
+            btn.click();
+          }
+        });
+        seatsGrid.appendChild(btn);
+      }
+      updateSelectedDisplay();
+    }
+
+    function toggleSeat(n,el){
+      if(el && el.getAttribute('aria-occupied')==='true') return;
+      const idx = selectedSeats.indexOf(n);
+      if(idx>-1){
+        selectedSeats.splice(idx,1);
+        if(el) el.removeAttribute('aria-selected');
+      }else{
+        selectedSeats.push(n);
+        if(el) el.setAttribute('aria-selected','true');
+      }
+      updateSelectedDisplay();
+    }
+
+    function updateSelectedDisplay(){
+      if(selectedSeats.length===0){
+        selectedSeatsDisplay.textContent='Nessun posto selezionato';
+      }else{
+        selectedSeatsDisplay.textContent='✓ Posti selezionati: ' + selectedSeats.slice().sort((a,b)=>a-b).join(', ');
+      }
+    }
+
+    function showAlert(msg,type){
+      alertEl.textContent='';
+      if(!msg){ return; }
+      const div = document.createElement('div');
+      div.textContent = msg;
+      div.style.padding='8px 10px';
+      div.style.borderRadius='999px';
+      div.style.fontSize='0.8rem';
+      if(type==='error'){
+        div.style.background='rgba(239,68,68,0.08)';
+        div.style.color='var(--danger)';
+        div.style.border='1px solid rgba(239,68,68,0.35)';
+      }else{
+        div.style.background='rgba(16,185,129,0.08)';
+        div.style.color='var(--brand-1)';
+        div.style.border='1px solid rgba(16,185,129,0.35)';
+      }
+      alertEl.appendChild(div);
+      setTimeout(()=>{ if(alertEl.contains(div)) alertEl.removeChild(div); },4000);
+    }
+
+    bookingForm.addEventListener('submit',function(e){
+      e.preventDefault();
+      const name = document.getElementById('passengerName').value.trim();
+      const email = document.getElementById('passengerEmail').value.trim();
+      const phone = document.getElementById('phoneNumber').value.trim();
+      const travelDate = document.getElementById('travelDate').value;
+      const trip = getCurrentTrip();
+
+      if(!trip || selectedSeats.length===0){
+        showAlert('Seleziona un viaggio e almeno un posto','error');
+        return;
+      }
+
+      const booking = {
+        id: Date.now(),
+        tripId: trip.id,
+        tripName: trip.name,
+        busType: trip.busType,
+        passengerName: name,
+        passengerEmail: email,
+        phoneNumber: phone,
+        seats: selectedSeats.slice(),
+        travelDate: travelDate,
+        bookingDate: new Date().toISOString()
+      };
+
+      bookings.push(booking);
+      save();
+      bookingForm.reset();
+      selectedSeats = [];
+      renderSeats();
+      renderSidebar();
+      renderBookingsPanels();
+      showAlert('Prenotazione confermata e email di conferma simulata inviata','success');
+      console.log('[EMAIL SIMULATA] Prenotazione per', booking.passengerEmail, booking);
+    });
+
+    // SIDEBAR & LISTE
+    function renderSidebar(){
+      document.getElementById('totalBookings').textContent = bookings.length;
+      document.getElementById('nextTripCount').textContent = bookings.length || '-';
+
+      const sideList = document.getElementById('bookingsListSide');
+      sideList.innerHTML='';
+      if(bookings.length===0){
+        sideList.innerHTML='<div style="color:var(--muted);font-size:0.75rem;">Non ci sono ancora prenotazioni.</div>';
+        return;
+      }
+      bookings.slice().reverse().forEach(b=>{
+        const card = document.createElement('div');
+        card.className='booking-card';
+        card.innerHTML =
+          '<h4>'+ (b.passengerName || 'Senza nome') +'</h4>'+
+          '<p>'+ (b.tripName || '') +' — posti '+ (b.seats.join(', ')) +'</p>'+
+          '<p style="font-size:0.7rem;color:#9ca3af;">Prenotato il: '+ new Date(b.bookingDate).toLocaleString() +'</p>';
+        sideList.appendChild(card);
+      });
+    }
+
+    function createBookingCard(b,withDelete){
+      const card = document.createElement('div');
+      card.className='booking-card';
+      const title = document.createElement('h4');
+      title.textContent = b.passengerName || 'Senza nome';
+      const info = document.createElement('p');
+      info.textContent = (b.tripName || '') + ' — posti ' + b.seats.join(', ');
+      const date1 = document.createElement('p');
+      date1.style.fontSize='0.7rem';
+      date1.style.color='#9ca3af';
+      date1.textContent = 'Data viaggio: ' + (b.travelDate || '-');
+      const date2 = document.createElement('p');
+      date2.style.fontSize='0.7rem';
+      date2.style.color='#9ca3af';
+      date2.textContent = 'Prenotato il: ' + new Date(b.bookingDate).toLocaleString();
+      card.appendChild(title);
+      card.appendChild(info);
+      card.appendChild(date1);
+      card.appendChild(date2);
+
+      if(withDelete){
+        const btnWrap = document.createElement('div');
+        btnWrap.style.marginTop='4px';
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.textContent='Elimina';
+        btn.className='btn secondary';
+        btn.style.padding='5px 10px';
+        btn.style.fontSize='0.7rem';
+        btn.addEventListener('click',()=>{
+          if(confirm('Eliminare prenotazione?')){
+            bookings = bookings.filter(x=>x.id!==b.id);
+            save();
+            renderSidebar();
+            renderBookingsPanels();
+            renderSeats();
+            showAlert('Prenotazione eliminata','success');
+          }
+        });
+        btnWrap.appendChild(btn);
+        card.appendChild(btnWrap);
+      }
+      return card;
+    }
+
+    function renderBookingsPanels(){
+      const listMain = document.getElementById('bookingsListMain');
+      const filterValue = document.getElementById('filterEmail').value.trim().toLowerCase();
+
+      const base = filterValue
+        ? bookings.filter(b=> (b.passengerEmail || '').toLowerCase().includes(filterValue))
+        : bookings;
+
+      listMain.innerHTML='';
+      if(base.length===0){
+        listMain.innerHTML='<div style="color:var(--muted);font-size:0.8rem;">Nessuna prenotazione.</div>';
+        return;
+      }
+      base.slice().reverse().forEach(b=>{
+        listMain.appendChild(createBookingCard(b,true));
+      });
+    }
+
+    // GESTIONE VIAGGI
+    document.getElementById('addTrip').addEventListener('click',function(){
+      const nameEl = document.getElementById('newTripName');
+      const priceEl = document.getElementById('newTripPrice');
+      const typeEl = document.getElementById('newTripBusType');
+      const name = nameEl.value.trim();
+      const price = parseFloat(priceEl.value) || 0;
+      const bt = typeEl.value;
+      if(!name || !bt){
+        showAlert('Compila nome e tipo autobus','error');
+        return;
+      }
+      const newId = trips.length ? Math.max.apply(null, trips.map(t=>t.id)) + 1 : 1;
+      trips.push({id:newId,name:name,price:price,busType:bt});
+      save();
+      renderTripOptions();
+      renderTrips();
+      nameEl.value='';
+      priceEl.value='';
+      typeEl.value='';
+      showAlert('Viaggio aggiunto','success');
+    });
+
+    function renderTrips(){
+      const container = document.getElementById('tripsList');
+      container.innerHTML='';
+      if(trips.length===0){
+        container.innerHTML='<div style="color:var(--muted);font-size:0.8rem;">Nessun viaggio configurato.</div>';
+        return;
+      }
+      trips.forEach(t=>{
+        const card = document.createElement('div');
+        card.className='trip-card';
+        const title = document.createElement('div');
+        title.style.fontWeight='700';
+        title.style.fontSize='0.9rem';
+        title.textContent = t.name;
+        const info = document.createElement('div');
+        info.style.fontSize='0.78rem';
+        info.style.color='var(--muted)';
+        const busLabel = busTypes[t.busType] ? busTypes[t.busType].name : t.busType;
+        info.textContent = busLabel + ' — €' + Number(t.price || 0).toFixed(2);
+        const actions = document.createElement('div');
+        actions.style.marginTop='6px';
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.textContent='Elimina';
+        btn.className='btn secondary';
+        btn.style.padding='5px 10px';
+        btn.style.fontSize='0.7rem';
+        btn.addEventListener('click',()=>{
+          if(confirm('Eliminare viaggio e tutte le prenotazioni correlate?')){
+            bookings = bookings.filter(b=>b.tripId!==t.id);
+            trips = trips.filter(x=>x.id!==t.id);
+            save();
+            renderTripOptions();
+            renderTrips();
+            renderSidebar();
+            renderBookingsPanels();
+            renderSeats();
+            showAlert('Viaggio eliminato','success');
+          }
+        });
+        actions.appendChild(btn);
+
+        card.appendChild(title);
+        card.appendChild(info);
+        card.appendChild(actions);
+        container.appendChild(card);
+      });
+    }
+
+    // FILTRO EMAIL
+    document.getElementById('filterEmail').addEventListener('input',renderBookingsPanels);
+
+    // CANCELLA POSTI
+    document.getElementById('clearSeats').addEventListener('click',function(){
+      selectedSeats = [];
+      renderSeats();
+      updateSelectedDisplay();
+    });
+
+    // CAMBIO VIAGGIO
+    selectedTripEl.addEventListener('change',renderSeats);
+
+    // ESPORTA CSV
+    document.getElementById('exportCsvBtn').addEventListener('click',function(){
+      if(bookings.length===0){
+        showAlert('Non ci sono prenotazioni da esportare','error');
+        return;
+      }
+      const header = [
+        'ID','Viaggio','Autobus','Passeggero','Email','Telefono','Posti','Data Viaggio','Data Prenotazione'
+      ];
+      const rows = bookings.map(b=>[
+        b.id,
+        b.tripName,
+        busTypes[b.busType] ? busTypes[b.busType].name : b.busType,
+        b.passengerName,
+        b.passengerEmail,
+        b.phoneNumber,
+        b.seats.join('-'),
+        b.travelDate,
+        new Date(b.bookingDate).toLocaleString()
+      ]);
+
+      const csvContent = [header, ...rows]
+        .map(row => row.map(cell => '"' + String(cell).replace(/"/g,'""') + '"').join(';'))
+        .join('\n');
+
+      const blob = new Blob([csvContent], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'prenotazioni_delgrosso.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showAlert('Esportazione CSV completata','success');
+    });
+
+    // TABS
+    tabs.forEach(t=>{
+      t.addEventListener('click',function(){
+        tabs.forEach(x=>x.removeAttribute('aria-current'));
+        this.setAttribute('aria-current','true');
+        switchPanel(this.dataset.target);
+      });
+    });
+
+    function switchPanel(name){
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      const target = document.getElementById('panel-'+name);
+      if(target) target.classList.add('active');
+    }
+
+    // INIT
+    loadInitialData();
+    renderTripOptions();
+    renderSeats();
+    renderSidebar();
+    renderTrips();
+    renderBookingsPanels();
+  </script>
+</body>
+</html>
