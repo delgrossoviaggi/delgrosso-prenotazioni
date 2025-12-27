@@ -1,0 +1,218 @@
+/* base */
+body{ margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#fafafa; }
+.container{ padding:14px; max-width: 1400px; margin:0 auto; }
+.page-title{ margin: 10px 0 14px; font-size:34px; }
+.hidden{ display:none !important; }
+
+/* HEADER (sticky) */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  display:grid;
+  grid-template-columns: 1fr auto 1fr; /* logo centro */
+  align-items:center;
+  gap: 10px;
+  padding: 10px 18px;
+  background:#fff;
+  border-bottom: 1px solid #eee;
+}
+
+/* sinistra */
+.top-left .brand-title{ font-size: 26px; font-weight: 950; line-height: 1.05; letter-spacing: .2px; }
+.top-left .brand-subtitle{ font-size: 14px; font-weight: 900; opacity: .85; margin-top: 2px; }
+.brand-tag{ font-size: 12px; opacity: .65; margin-top: 4px; font-weight: 700; }
+
+/* centro: LOGO 150x150 */
+.top-center{ display:flex; justify-content:center; align-items:center; }
+.logo-center{ width:150px; height:150px; object-fit:contain; display:block; }
+
+/* destra */
+.top-right{ display:flex; justify-content:flex-end; }
+.admin-btn{
+  width:42px; height:42px;
+  margin-top:0;
+  padding:0;
+  border-radius:12px;
+  border:1px solid #ddd;
+  background:#fff;
+  cursor:pointer;
+  font-weight:900;
+}
+
+/* cards */
+.card{ background:#fff; border:1px solid #eee; border-radius:18px; padding:14px; box-shadow:0 10px 24px rgba(0,0,0,.06); }
+label{ display:block; font-weight:800; margin-top:10px; }
+input, select{ width:100%; padding:10px; border:1px solid #ddd; border-radius:12px; margin-top:6px; }
+button{ padding:11px; border:1px solid #ddd; border-radius:12px; background:#fff; cursor:pointer; margin-top:10px; width:100%; font-weight:800; }
+.sep{ margin:14px 0; border:0; border-top:1px solid #eee; }
+.msg{ margin-top:10px; font-size:13px; }
+.h4{ margin:0 0 8px; font-size:14px; }
+
+/* layout */
+.layout-3{
+  display:grid;
+  grid-template-columns: 320px 520px 1fr;
+  gap: 18px;
+  align-items:start;
+}
+.center-card{ width:520px; justify-self:center; }
+.right-card{ min-height: 560px; }
+
+/* locandine sinistra */
+.locandine-left{
+  border:1px solid #eee;
+  border-radius:18px;
+  background:#fff;
+  padding:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.06);
+  height: calc(100vh - 230px); /* header più alto per logo 150 */
+  overflow:auto;
+}
+.locandine-title{ font-weight:900; margin-bottom:10px; }
+.locandine-grid{ display:grid; grid-template-columns: 1fr; gap:12px; }
+.locandina{
+  border-radius: 14px;
+  border: 1px solid #eee;
+  overflow:hidden;
+  cursor:pointer;
+  background:#fff;
+}
+.locandina img{ width:100%; height:180px; object-fit:cover; display:block; }
+.locandina .cap{ font-size:12px; padding:8px 10px; border-top:1px solid #eee; }
+
+/* selected seats */
+.selected-box{ margin-top:10px; padding:10px; border:1px dashed #ddd; border-radius:12px; background:#fcfcfc; }
+.selected-title{ font-weight:900; margin-bottom:6px; }
+.selected-seats{ font-size:13px; }
+
+/* seatmap */
+#seatMap{ min-height: 420px; }
+.seatmap{ display:flex; flex-direction:column; gap:10px; padding: 6px; border-radius: 14px; background: #fff; }
+
+/* ===== 2 POSTI + CORRIDOIO VISIBILE + 2 POSTI ===== */
+.seatrow{
+  display:grid;
+  grid-template-columns: 1fr 1fr 36px 1fr 1fr; /* corridoio largo */
+  gap:10px;
+  align-items:stretch;
+}
+
+/* corridoio */
+.aisle{
+  width: 36px;
+  border-radius: 12px;
+  border: 1px solid #e7e7e7;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(0,0,0,0.07) 0px,
+      rgba(0,0,0,0.07) 10px,
+      rgba(0,0,0,0.02) 10px,
+      rgba(0,0,0,0.02) 20px
+    );
+  min-height: 44px;
+}
+
+/* porta dx */
+.door{
+  grid-column: 4 / 6;
+  height: 44px;
+  border: 2px dashed #ddd;
+  border-radius: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  font-size: 12px;
+  opacity: .9;
+}
+
+/* ultimi 5 dietro */
+.tailrow{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:10px;
+}
+
+.seat{
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  font-weight:900;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  min-height: 44px;
+}
+.seat.occupied{ opacity:.55; cursor:not-allowed; }
+.seat.selected{ outline:3px solid #000; }
+
+/* modal */
+.modal{ position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:9999; }
+.modal.hidden{ display:none; }
+.modal-card{
+  width:min(760px, 94vw);
+  background:#fff;
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.22);
+}
+.ok{ margin:8px 0; font-weight:900; }
+.close{ width:100%; }
+
+.routesList{ margin-top:10px; font-size:13px; }
+.routeRow{ display:flex; gap:8px; align-items:center; margin:6px 0; }
+.routeRow strong{ flex:1; }
+.routeRow button{ width:auto; padding:6px 8px; margin-top:0; }
+
+.rowBtns{ display:flex; gap:8px; }
+.rowBtns button{ width:auto; margin-top:0; }
+
+.tableWrap{ overflow:auto; max-height:260px; margin-top:10px; border:1px solid #eee; border-radius:12px; }
+.tbl{ width:100%; border-collapse:collapse; font-size:12px; }
+.tbl th,.tbl td{ border-bottom:1px solid #eee; padding:6px 8px; text-align:left; white-space:nowrap; }
+.tbl th{ position:sticky; top:0; background:#fff; }
+
+/* locandina fullscreen */
+.poster-card{
+  width: min(980px, 96vw);
+  max-height: 92vh;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.25);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.poster-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.poster-title{ font-weight: 950; font-size: 16px; }
+.poster-actions{ display:flex; gap:10px; align-items:center; }
+.poster-actions button{ width:auto; margin-top:0; padding:10px 12px; }
+.poster-img{
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 14px;
+  border: 1px solid #eee;
+  background:#fafafa;
+}
+.poster-info{ font-size: 13px; opacity: .8; }
+.poster-close{ border:1px solid #ddd; }
+
+@media (max-width: 1100px){
+  .layout-3{ grid-template-columns: 1fr; }
+  .center-card{ width:100%; justify-self:stretch; }
+  .locandine-left{ height: 260px; }
+  .topbar{ grid-template-columns: 1fr; justify-items:center; text-align:center; }
+  .top-right{ justify-content:center; }
+}

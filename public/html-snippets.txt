@@ -1,0 +1,51 @@
+1) HEADER (logo alto sinistra + pulsante admin)
+<header class="topbar">
+  <div class="brand">
+    <img src="./assets/logo.png" class="logo" alt="DelGrosso Viaggi">
+  </div>
+  <button id="adminBtn" class="admin-btn" type="button">Admin</button>
+</header>
+
+2) LOCANDINE (basso a destra)
+<aside class="locandine" aria-label="Locandine viaggi">
+  <div class="locandine-title">Locandine</div>
+  <div id="locandineGrid" class="locandine-grid"></div>
+</aside>
+
+3) MODAL ADMIN
+<div id="adminModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>Admin</h3>
+
+    <div id="adminLoggedOut">
+      <input id="adminEmail" placeholder="Email" type="email" autocomplete="username">
+      <input id="adminPass" placeholder="Password" type="password" autocomplete="current-password">
+      <button id="loginBtn" type="button">Entra</button>
+    </div>
+
+    <div id="adminLoggedIn" class="hidden">
+      <p class="ok">Sei loggato ✅</p>
+
+      <input id="locTitle" placeholder="Titolo locandina (es: Roma → Napoli)">
+      <input id="locViaggio" placeholder="Viaggio (valore esatto del tuo select)">
+      <input id="locData" placeholder="Data (YYYY-MM-DD)">
+      <input id="locPartenza" placeholder="Partenza (opzionale)">
+      <input id="locArrivo" placeholder="Arrivo (opzionale)">
+      <input id="locBusType" placeholder="Bus (es: GT - 53 posti / GT - 63 posti)">
+
+      <input id="locFile" type="file" accept="image/*">
+      <button id="uploadLoc" type="button">Carica locandina</button>
+
+      <button id="logoutBtn" type="button">Esci</button>
+    </div>
+
+    <button id="closeAdmin" class="close" type="button">Chiudi</button>
+  </div>
+</div>
+
+4) SCRIPT (in fondo, prima di </body>)
+<script type="module" src="./firebase.js"></script>
+<script type="module" src="./locandine.js"></script>
+<script type="module" src="./admin.js"></script>
+<!-- i seatmap li importi nel tuo main.js -->
+<script type="module" src="./main.js"></script>
