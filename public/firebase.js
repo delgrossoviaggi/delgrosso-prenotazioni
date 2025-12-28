@@ -1,6 +1,4 @@
 // public/firebase.js
-// Firebase (Vercel + Firestore + Storage) — VERSIONE PULITA
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
@@ -14,9 +12,6 @@ const firebaseConfig = {
   appId: "1:482448201437:web:8547de3854f274dedfad34"
 };
 
-// Init Firebase
 export const app = initializeApp(firebaseConfig);
-
-// Firestore + Storage
 export const db = getFirestore(app);
 export const storage = getStorage(app);
