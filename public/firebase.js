@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBeewwb030YelvWvGq3C0lj_IDTB7jRx2Q",
   authDomain: "delgrosso-viaggi.firebaseapp.com",
   projectId: "delgrosso-viaggi",
-  storageBucket: "delgrosso-viaggi.appspot.com",
+  storageBucket: "delgrosso-viaggi.firebasestorage.app",
   messagingSenderId: "482448201437",
   appId: "1:482448201437:web:8547de3854f274dedfad34"
 };
