@@ -1,13 +1,22 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-storage.js";
+// public/firebase.js
+// Firebase (Vercel + Firestore + Storage) — VERSIONE PULITA
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
-  // INCOLLA QUI la config che ti dà Firebase (Project settings -> Your apps -> Web app)
+  apiKey: "AIzaSyBeewwb030YelvWvGq3C0lj_IDTB7jRx2Q",
+  authDomain: "delgrosso-viaggi.firebaseapp.com",
+  projectId: "delgrosso-viaggi",
+  storageBucket: "delgrosso-viaggi.appspot.com",
+  messagingSenderId: "482448201437",
+  appId: "1:482448201437:web:8547de3854f274dedfad34"
 };
 
+// Init Firebase
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Firestore + Storage
 export const db = getFirestore(app);
 export const storage = getStorage(app);
