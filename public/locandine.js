@@ -1,10 +1,7 @@
-// public/locandine.js (Firestore + Storage)
-// - Locandine visibili su tutti i dispositivi
-// - Click locandina: fullscreen + bottone "Seleziona questo viaggio"
-
+// public/locandine.js
 import { db, storage } from "./firebase.js";
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   ref, uploadBytes, getDownloadURL, deleteObject
@@ -12,7 +9,7 @@ import {
 
 const postersCol = collection(db, "posters");
 
-// ====== MODAL FULLSCREEN ======
+// ===== MODAL FULLSCREEN =====
 const posterModal = document.getElementById("posterModal");
 const posterImg = document.getElementById("posterImg");
 const posterTitle = document.getElementById("posterTitle");
@@ -53,7 +50,7 @@ function closePoster() {
 posterCloseBtn?.addEventListener("click", closePoster);
 posterModal?.addEventListener("click", (e) => { if (e.target === posterModal) closePoster(); });
 
-// ✅ seleziona automaticamente viaggio + data + bus dalla locandina
+// ✅ click: imposta tutto, bus bloccato
 posterUseBtn?.addEventListener("click", () => {
   if (!currentPoster) return;
 
@@ -62,7 +59,7 @@ posterUseBtn?.addEventListener("click", () => {
   const partenzaEl = document.getElementById("partenza");
   const busEl = document.getElementById("busType");
 
-  // se il viaggio non esiste nel select lo aggiungiamo
+  // se il viaggio non esiste nel select, lo aggiungo
   if (viaggioEl && currentPoster.viaggio) {
     const exists = Array.from(viaggioEl.options).some(o => o.value === currentPoster.viaggio);
     if (!exists) {
@@ -77,13 +74,12 @@ posterUseBtn?.addEventListener("click", () => {
   if (dataEl && currentPoster.data) dataEl.value = currentPoster.data;
   if (partenzaEl && currentPoster.partenza) partenzaEl.value = currentPoster.partenza;
 
-  // BUS impostato dalla locandina e BLOCCATO (utente non cambia)
   if (busEl && currentPoster.busType) {
     busEl.value = currentPoster.busType;
-    busEl.disabled = true;
+    busEl.disabled = true; // ✅ utente non cambia
   }
 
-  // link condivisibile
+  // aggiorna URL condivisibile
   const params = new URLSearchParams(window.location.search);
   setParam(params, "viaggio", currentPoster.viaggio);
   setParam(params, "data", currentPoster.data);
@@ -97,13 +93,12 @@ posterUseBtn?.addEventListener("click", () => {
   document.getElementById("bookingForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-// ====== RENDER ======
+// ===== RENDER =====
 export function renderLocandine(list = []) {
   const grid = document.getElementById("locandineGrid");
   if (!grid) return;
 
   grid.innerHTML = "";
-
   if (!list.length) {
     const msg = document.createElement("div");
     msg.style.fontSize = "12px";
@@ -131,7 +126,7 @@ async function fetchPosters() {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// ====== API ADMIN GLOBALE ======
+// ===== API (Admin) =====
 window.LocandineStore = {
   async getAll() {
     const list = await fetchPosters();
@@ -140,7 +135,6 @@ window.LocandineStore = {
   },
 
   async add({ title, viaggio, data, partenza, busType, file }) {
-    // upload image to storage
     const path = `posters/${Date.now()}-${file.name}`;
     const fileRef = ref(storage, path);
     await uploadBytes(fileRef, file);
@@ -163,10 +157,9 @@ window.LocandineStore = {
   async update(id, patch, newFile) {
     const dref = doc(db, "posters", id);
 
-    // se cambia immagine: carica nuova e cancella vecchia
     if (newFile) {
-      const oldSnap = await (await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")).getDoc(dref);
-      const old = oldSnap.data();
+      const snap = await getDoc(dref);
+      const old = snap.data();
 
       const path = `posters/${Date.now()}-${newFile.name}`;
       const fileRef = ref(storage, path);
@@ -187,9 +180,6 @@ window.LocandineStore = {
 
   async remove(id) {
     const dref = doc(db, "posters", id);
-
-    // leggi per cancellare anche la foto
-    const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
     const snap = await getDoc(dref);
     const data = snap.data();
 
@@ -202,12 +192,10 @@ window.LocandineStore = {
   }
 };
 
-// refresh automatico quando cambiano
 window.addEventListener("locandineUpdated", async () => {
   await window.LocandineStore.getAll();
 });
 
-// prima render
 document.addEventListener("DOMContentLoaded", async () => {
   await window.LocandineStore.getAll();
 });
