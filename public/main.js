@@ -1,15 +1,13 @@
 import { renderSeatMapGT53 } from "./seatmap-gt53.js";
 import { renderSeatMapGT63 } from "./seatmap-gt63.js";
+import { addBooking, getOccupiedSeatsByTripKey } from "./bookings-store.js";
 
 const ROUTES_KEY = "delgrosso_routes_v1";
-const BOOKINGS_KEY = "delgrosso_bookings_v1";
 
 const seatMapEl = document.getElementById("seatMap");
 const selected = new Set();
 
 function loadRoutes(){ try { return JSON.parse(localStorage.getItem(ROUTES_KEY) || "[]"); } catch { return []; } }
-function loadBookings(){ try { return JSON.parse(localStorage.getItem(BOOKINGS_KEY) || "[]"); } catch { return []; } }
-function saveBookings(list){ localStorage.setItem(BOOKINGS_KEY, JSON.stringify(list)); }
 
 function busCapacity(busType){ return busType === "GT - 63 posti" ? 63 : 53; }
 
@@ -47,28 +45,28 @@ function currentTripKey(){
   return `${viaggio}||${data}||${bus}`;
 }
 
-function getOccupiedSeatsForCurrentTrip(){
+let occupiedCache = new Set();
+
+async function getOccupiedSeatsForCurrentTrip(){
   const key = currentTripKey();
-  const bookings = loadBookings().filter(b => b.tripKey === key);
-  const occ = new Set();
-  bookings.forEach(b => (b.seats || []).forEach(s => occ.add(Number(s))));
-  return occ;
+  occupiedCache = await getOccupiedSeatsByTripKey(key);
+  return occupiedCache;
 }
 
-function toggleSeat(n){
-  const occupied = getOccupiedSeatsForCurrentTrip();
+async function toggleSeat(n){
+  const occupied = await getOccupiedSeatsForCurrentTrip();
   if (occupied.has(n)) return;
 
   if (selected.has(n)) selected.delete(n);
   else selected.add(n);
 
-  renderSeatMap();
+  await renderSeatMap();
   updateSelectedUI();
 }
 
-function renderSeatMap(){
+async function renderSeatMap(){
   const busType = document.getElementById("busType").value;
-  const occupied = getOccupiedSeatsForCurrentTrip();
+  const occupied = await getOccupiedSeatsForCurrentTrip();
 
   const options = { selected, occupied, onToggleSeat: toggleSeat };
   if (busType === "GT - 53 posti") renderSeatMapGT53(seatMapEl, options);
@@ -81,6 +79,12 @@ function renderSeatMap(){
   if (prenotaBtn) prenotaBtn.disabled = full;
 
   if (full) showMsg("BUS PIENO: prenotazioni bloccate ✅", true);
+  else showMsg("", true);
+}
+
+function setParam(params, key, val) {
+  if (val && String(val).trim() !== "") params.set(key, String(val).trim());
+  else params.delete(key);
 }
 
 function setURLFromUI(){
@@ -99,7 +103,18 @@ function setURLFromUI(){
   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 }
 
-function restoreFromURL(){
+function ensureSelectOption(selectEl, value) {
+  if (!selectEl || !value) return;
+  const exists = Array.from(selectEl.options).some(o => o.value === value);
+  if (!exists) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = value;
+    selectEl.appendChild(opt);
+  }
+}
+
+async function restoreFromURL(){
   const params = new URLSearchParams(window.location.search);
 
   const viaggio = params.get("viaggio");
@@ -107,26 +122,39 @@ function restoreFromURL(){
   const partenza = params.get("partenza");
   const bus = params.get("bus");
 
-  if (viaggio) document.getElementById("viaggio").value = viaggio;
-  if (data) document.getElementById("dataViaggio").value = data;
-  if (partenza) document.getElementById("partenza").value = partenza;
-  if (bus) document.getElementById("busType").value = bus;
+  const viaggioEl = document.getElementById("viaggio");
+  const dataEl = document.getElementById("dataViaggio");
+  const partenzaEl = document.getElementById("partenza");
+  const busEl = document.getElementById("busType");
 
-  renderSeatMap();
+  if (viaggio) ensureSelectOption(viaggioEl, viaggio);
+
+  if (viaggioEl && viaggio) viaggioEl.value = viaggio;
+  if (dataEl && data) dataEl.value = data;
+  if (partenzaEl && partenza) partenzaEl.value = partenza;
+
+  if (busEl && bus) {
+    busEl.value = bus;
+    // se il bus arriva dal link (o da locandina) lo blocchiamo
+    busEl.disabled = true;
+  }
+
+  await renderSeatMap();
   updateSelectedUI();
 }
 
 ["viaggio","dataViaggio","partenza"].forEach(id=>{
   const el = document.getElementById(id);
-  el?.addEventListener("input", () => { setURLFromUI(); renderSeatMap(); });
-  el?.addEventListener("change", () => { setURLFromUI(); renderSeatMap(); });
+  el?.addEventListener("input", async () => { setURLFromUI(); await renderSeatMap(); });
+  el?.addEventListener("change", async () => { setURLFromUI(); await renderSeatMap(); });
 });
 
-document.getElementById("busType")?.addEventListener("change", () => {
+// bus cambia solo se NON è bloccato (es: admin o reset)
+document.getElementById("busType")?.addEventListener("change", async () => {
   selected.clear();
   updateSelectedUI();
   setURLFromUI();
-  renderSeatMap();
+  await renderSeatMap();
 });
 
 document.getElementById("copyLinkBtn")?.addEventListener("click", async () => {
@@ -135,7 +163,7 @@ document.getElementById("copyLinkBtn")?.addEventListener("click", async () => {
   showMsg("Link copiato ✅", true);
 });
 
-document.getElementById("prenotaBtn")?.addEventListener("click", () => {
+document.getElementById("prenotaBtn")?.addEventListener("click", async () => {
   const nome = document.getElementById("nome").value.trim();
   const cognome = document.getElementById("cognome").value.trim();
   const telefono = document.getElementById("telefono").value.trim();
@@ -149,7 +177,7 @@ document.getElementById("prenotaBtn")?.addEventListener("click", () => {
   if (!viaggio || !data) return showMsg("Seleziona Viaggio e Data.");
   if (selected.size === 0) return showMsg("Seleziona almeno 1 posto.");
 
-  const occupied = getOccupiedSeatsForCurrentTrip();
+  const occupied = await getOccupiedSeatsForCurrentTrip();
   for (const s of selected) {
     if (occupied.has(s)) return showMsg(`Il posto ${s} è già occupato. Riprova.`);
   }
@@ -158,38 +186,34 @@ document.getElementById("prenotaBtn")?.addEventListener("click", () => {
   if (occupied.size + selected.size > cap) return showMsg("Non ci sono abbastanza posti disponibili.");
 
   const booking = {
-    id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now())),
     tripKey: currentTripKey(),
     viaggio, data, partenza, busType,
     nome, cognome, telefono,
-    seats: Array.from(selected).sort((a,b)=>a-b),
-    createdAt: Date.now()
+    seats: Array.from(selected).sort((a,b)=>a-b)
   };
 
-  const all = loadBookings();
-  all.push(booking);
-  saveBookings(all);
+  await addBooking(booking);
 
   selected.clear();
   updateSelectedUI();
-  renderSeatMap();
+  await renderSeatMap();
 
-  window.dispatchEvent(new CustomEvent("bookingsUpdated"));
   showMsg("Prenotazione salvata ✅", true);
 });
 
 window.addEventListener("routesUpdated", () => refreshViaggioOptions());
 
-window.addEventListener("tripChangedFromLocandina", () => {
+window.addEventListener("tripChangedFromLocandina", async () => {
   selected.clear();
   updateSelectedUI();
   setURLFromUI();
-  renderSeatMap();
+  await renderSeatMap();
   document.getElementById("seatSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   refreshViaggioOptions();
-  restoreFromURL();
-  renderSeatMap();
+  await restoreFromURL();
+  await renderSeatMap();
+  updateSelectedUI();
 });
