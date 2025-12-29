@@ -1,4 +1,3 @@
-// public/bookings-store.js
 import { db } from "./firebase.js";
 import {
   collection, addDoc, getDocs, query, where, orderBy, serverTimestamp
@@ -10,7 +9,7 @@ export async function addBooking(data) {
   await addDoc(col, { ...data, createdAt: serverTimestamp() });
 }
 
-export async function listBookings(limitTo = 300) {
+export async function listBookings(limitTo = 500) {
   const q = query(col, orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.slice(0, limitTo).map(d => ({ id: d.id, ...d.data() }));
