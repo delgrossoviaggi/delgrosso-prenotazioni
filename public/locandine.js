@@ -1,7 +1,7 @@
-// public/locandine.js
 import { db, storage } from "./firebase.js";
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, getDoc
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
+  query, orderBy, getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   ref, uploadBytes, getDownloadURL, deleteObject
@@ -9,7 +9,10 @@ import {
 
 const postersCol = collection(db, "posters");
 
-// ===== MODAL FULLSCREEN =====
+// UI
+const grid = document.getElementById("locandineGrid");
+
+// modal
 const posterModal = document.getElementById("posterModal");
 const posterImg = document.getElementById("posterImg");
 const posterTitle = document.getElementById("posterTitle");
@@ -24,12 +27,15 @@ function setParam(params, key, val) {
   else params.delete(key);
 }
 
+function renderEmpty(msg = "Nessuna locandina disponibile.") {
+  if (!grid) return;
+  grid.innerHTML = `<div style="font-size:12px;opacity:.7">${msg}</div>`;
+}
+
 function openPoster(item) {
   currentPoster = item;
-
   posterTitle.textContent = item.title || "";
   posterImg.src = item.imageUrl || "";
-
   posterInfo.textContent = [
     item.viaggio ? `Viaggio: ${item.viaggio}` : "",
     item.data ? `Data: ${item.data}` : "",
@@ -38,19 +44,16 @@ function openPoster(item) {
   ].filter(Boolean).join(" • ");
 
   posterModal.classList.remove("hidden");
-  posterModal.setAttribute("aria-hidden", "false");
 }
 
 function closePoster() {
   posterModal.classList.add("hidden");
-  posterModal.setAttribute("aria-hidden", "true");
   currentPoster = null;
 }
 
 posterCloseBtn?.addEventListener("click", closePoster);
 posterModal?.addEventListener("click", (e) => { if (e.target === posterModal) closePoster(); });
 
-// ✅ click: imposta tutto, bus bloccato
 posterUseBtn?.addEventListener("click", () => {
   if (!currentPoster) return;
 
@@ -59,7 +62,6 @@ posterUseBtn?.addEventListener("click", () => {
   const partenzaEl = document.getElementById("partenza");
   const busEl = document.getElementById("busType");
 
-  // se il viaggio non esiste nel select, lo aggiungo
   if (viaggioEl && currentPoster.viaggio) {
     const exists = Array.from(viaggioEl.options).some(o => o.value === currentPoster.viaggio);
     if (!exists) {
@@ -70,16 +72,14 @@ posterUseBtn?.addEventListener("click", () => {
     }
     viaggioEl.value = currentPoster.viaggio;
   }
-
   if (dataEl && currentPoster.data) dataEl.value = currentPoster.data;
   if (partenzaEl && currentPoster.partenza) partenzaEl.value = currentPoster.partenza;
 
   if (busEl && currentPoster.busType) {
     busEl.value = currentPoster.busType;
-    busEl.disabled = true; // ✅ utente non cambia
+    busEl.disabled = true;
   }
 
-  // aggiorna URL condivisibile
   const params = new URLSearchParams(window.location.search);
   setParam(params, "viaggio", currentPoster.viaggio);
   setParam(params, "data", currentPoster.data);
@@ -88,32 +88,21 @@ posterUseBtn?.addEventListener("click", () => {
   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 
   window.dispatchEvent(new CustomEvent("tripChangedFromLocandina", { detail: currentPoster }));
-
   closePoster();
   document.getElementById("bookingForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-// ===== RENDER =====
-export function renderLocandine(list = []) {
-  const grid = document.getElementById("locandineGrid");
+function renderLocandine(list) {
   if (!grid) return;
-
   grid.innerHTML = "";
-  if (!list.length) {
-    const msg = document.createElement("div");
-    msg.style.fontSize = "12px";
-    msg.style.opacity = "0.7";
-    msg.textContent = "Nessuna locandina disponibile.";
-    grid.appendChild(msg);
-    return;
-  }
+  if (!list.length) return renderEmpty();
 
   list.forEach(item => {
     const card = document.createElement("div");
     card.className = "locandina";
     card.innerHTML = `
       <img src="${item.imageUrl}" alt="${item.title}">
-      <div class="cap">${item.title}</div>
+      <div class="cap">${item.title || ""}</div>
     `;
     card.addEventListener("click", () => openPoster(item));
     grid.appendChild(card);
@@ -126,7 +115,6 @@ async function fetchPosters() {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// ===== API (Admin) =====
 window.LocandineStore = {
   async getAll() {
     const list = await fetchPosters();
@@ -141,7 +129,7 @@ window.LocandineStore = {
     const imageUrl = await getDownloadURL(fileRef);
 
     await addDoc(postersCol, {
-      title,
+      title: title || "",
       viaggio: viaggio || "",
       data: data || "",
       partenza: partenza || "",
@@ -193,9 +181,16 @@ window.LocandineStore = {
 };
 
 window.addEventListener("locandineUpdated", async () => {
-  await window.LocandineStore.getAll();
+  try { await window.LocandineStore.getAll(); }
+  catch (e) { console.error(e); }
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await window.LocandineStore.getAll();
+  try {
+    renderEmpty("Caricamento locandine…");
+    await window.LocandineStore.getAll();
+  } catch (e) {
+    console.error("Errore locandine:", e);
+    renderEmpty("ERRORE caricamento locandine (controlla Storage/Rules).");
+  }
 });
