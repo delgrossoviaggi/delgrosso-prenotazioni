@@ -1,10 +1,12 @@
-// public/firebase.js
+// public/firebase.js (PULITO)
+// Firestore + Storage (no Analytics)
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBeewwb030YelvWvGq3C0lj_IDTB7jRx2Q",
+  apiKey: "AIzaSyBeewwb030YelvWvWq3C0lj_IDTB7jRx2Q",
   authDomain: "delgrosso-viaggi.firebaseapp.com",
   projectId: "delgrosso-viaggi",
   storageBucket: "delgrosso-viaggi.firebasestorage.app",
@@ -14,4 +16,6 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
+
+// ✅ bucket esplicito (evita problemi)
+export const storage = getStorage(app, `gs://${firebaseConfig.storageBucket}`);
