@@ -1,18 +1,8 @@
-import { db, storage } from "./firebase.js";
-import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
-  query, orderBy, getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  ref, uploadBytes, getDownloadURL, deleteObject
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { LOCANDINE_PROVIDER, LOCANDINE_A_JSON, LOCANDINE_B_JSON_URL, LOCANDINE_C_JSON_URL } from "./config.js";
+import { supabase } from "./supabase.js";
 
-const postersCol = collection(db, "posters");
-
-// UI
 const grid = document.getElementById("locandineGrid");
 
-// modal
 const posterModal = document.getElementById("posterModal");
 const posterImg = document.getElementById("posterImg");
 const posterTitle = document.getElementById("posterTitle");
@@ -22,11 +12,6 @@ const posterCloseBtn = document.getElementById("posterCloseBtn");
 
 let currentPoster = null;
 
-function setParam(params, key, val) {
-  if (val && String(val).trim() !== "") params.set(key, String(val).trim());
-  else params.delete(key);
-}
-
 function renderEmpty(msg = "Nessuna locandina disponibile.") {
   if (!grid) return;
   grid.innerHTML = `<div style="font-size:12px;opacity:.7">${msg}</div>`;
@@ -35,14 +20,13 @@ function renderEmpty(msg = "Nessuna locandina disponibile.") {
 function openPoster(item) {
   currentPoster = item;
   posterTitle.textContent = item.title || "";
-  posterImg.src = item.imageUrl || "";
+  posterImg.src = item.image || item.imageUrl || item.img || item.imageURL || "";
   posterInfo.textContent = [
     item.viaggio ? `Viaggio: ${item.viaggio}` : "",
     item.data ? `Data: ${item.data}` : "",
     item.partenza ? `Partenza: ${item.partenza}` : "",
     item.busType ? `Bus: ${item.busType}` : ""
   ].filter(Boolean).join(" • ");
-
   posterModal.classList.remove("hidden");
 }
 
@@ -81,10 +65,10 @@ posterUseBtn?.addEventListener("click", () => {
   }
 
   const params = new URLSearchParams(window.location.search);
-  setParam(params, "viaggio", currentPoster.viaggio);
-  setParam(params, "data", currentPoster.data);
-  setParam(params, "partenza", currentPoster.partenza);
-  setParam(params, "bus", currentPoster.busType);
+  if (currentPoster.viaggio) params.set("viaggio", currentPoster.viaggio);
+  if (currentPoster.data) params.set("data", currentPoster.data);
+  if (currentPoster.partenza) params.set("partenza", currentPoster.partenza);
+  if (currentPoster.busType) params.set("bus", currentPoster.busType);
   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 
   window.dispatchEvent(new CustomEvent("tripChangedFromLocandina", { detail: currentPoster }));
@@ -92,16 +76,17 @@ posterUseBtn?.addEventListener("click", () => {
   document.getElementById("bookingForm")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-function renderLocandine(list) {
+function render(list) {
   if (!grid) return;
   grid.innerHTML = "";
-  if (!list.length) return renderEmpty();
+  if (!list?.length) return renderEmpty();
 
   list.forEach(item => {
     const card = document.createElement("div");
     card.className = "locandina";
+    const src = item.image || item.imageUrl || item.img || item.imageURL || "";
     card.innerHTML = `
-      <img src="${item.imageUrl}" alt="${item.title}">
+      <img src="${src}" alt="${item.title || ""}">
       <div class="cap">${item.title || ""}</div>
     `;
     card.addEventListener("click", () => openPoster(item));
@@ -109,88 +94,70 @@ function renderLocandine(list) {
   });
 }
 
-async function fetchPosters() {
-  const q = query(postersCol, orderBy("createdAt", "desc"));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+async function loadJSON(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
 }
 
-window.LocandineStore = {
-  async getAll() {
-    const list = await fetchPosters();
-    renderLocandine(list);
-    return list;
-  },
+async function loadLocandineFromSupabase() {
+  const { data, error } = await supabase
+    .from("posters")
+    .select("title, viaggio, data, partenza, busType, imageUrl, active, created_at")
+    .eq("active", true)
+    .order("created_at", { ascending: false });
 
-  async add({ title, viaggio, data, partenza, busType, file }) {
-    const path = `posters/${Date.now()}-${file.name}`;
-    const fileRef = ref(storage, path);
-    await uploadBytes(fileRef, file);
-    const imageUrl = await getDownloadURL(fileRef);
+  if (error) throw error;
 
-    await addDoc(postersCol, {
-      title: title || "",
-      viaggio: viaggio || "",
-      data: data || "",
-      partenza: partenza || "",
-      busType: busType || "",
-      imageUrl,
-      storagePath: path,
-      createdAt: serverTimestamp()
-    });
+  return (data || []).map(x => ({
+    title: x.title || "",
+    viaggio: x.viaggio || "",
+    data: x.data || "",
+    partenza: x.partenza || "",
+    busType: x.busType || "",
+    imageUrl: x.imageUrl || ""
+  }));
+}
 
-    window.dispatchEvent(new CustomEvent("locandineUpdated"));
-  },
+async function loadLocandine() {
+  if (!grid) return;
 
-  async update(id, patch, newFile) {
-    const dref = doc(db, "posters", id);
+  renderEmpty("Caricamento locandine…");
 
-    if (newFile) {
-      const snap = await getDoc(dref);
-      const old = snap.data();
-
-      const path = `posters/${Date.now()}-${newFile.name}`;
-      const fileRef = ref(storage, path);
-      await uploadBytes(fileRef, newFile);
-      const imageUrl = await getDownloadURL(fileRef);
-
-      patch.imageUrl = imageUrl;
-      patch.storagePath = path;
-
-      if (old?.storagePath) {
-        try { await deleteObject(ref(storage, old.storagePath)); } catch {}
-      }
+  // A) statico (con override locale)
+  if (LOCANDINE_PROVIDER === "A") {
+    const override = localStorage.getItem("delgrosso_locandine_override_v1");
+    if (override) {
+      try { return render(JSON.parse(override)); } catch {}
     }
-
-    await updateDoc(dref, patch);
-    window.dispatchEvent(new CustomEvent("locandineUpdated"));
-  },
-
-  async remove(id) {
-    const dref = doc(db, "posters", id);
-    const snap = await getDoc(dref);
-    const data = snap.data();
-
-    if (data?.storagePath) {
-      try { await deleteObject(ref(storage, data.storagePath)); } catch {}
-    }
-
-    await deleteDoc(dref);
-    window.dispatchEvent(new CustomEvent("locandineUpdated"));
+    const list = await loadJSON(LOCANDINE_A_JSON);
+    return render(list);
   }
-};
 
-window.addEventListener("locandineUpdated", async () => {
-  try { await window.LocandineStore.getAll(); }
-  catch (e) { console.error(e); }
+  // B) Cloudinary JSON pubblico
+  if (LOCANDINE_PROVIDER === "B") {
+    if (!LOCANDINE_B_JSON_URL) return renderEmpty("Provider locandine non configurato.");
+    const list = await loadJSON(LOCANDINE_B_JSON_URL);
+    return render(list);
+  }
+
+  // C) Supabase: se hai un JSON pubblico lo usi, altrimenti leggi la tabella posters
+  if (LOCANDINE_PROVIDER === "C") {
+    if (LOCANDINE_C_JSON_URL) {
+      const list = await loadJSON(LOCANDINE_C_JSON_URL);
+      return render(list);
+    }
+    const list = await loadLocandineFromSupabase();
+    return render(list);
+  }
+
+  return renderEmpty("Provider locandine non configurato.");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadLocandine().catch(() => renderEmpty("ERRORE caricamento locandine."));
 });
 
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    renderEmpty("Caricamento locandine…");
-    await window.LocandineStore.getAll();
-  } catch (e) {
-    console.error("Errore locandine:", e);
-    renderEmpty("ERRORE caricamento locandine (controlla Storage/Rules).");
-  }
+window.addEventListener("locandineUpdated", () => {
+  loadLocandine().catch(() => renderEmpty("ERRORE caricamento locandine."));
 });
