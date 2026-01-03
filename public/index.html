@@ -2,184 +2,76 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DelGrosso Prenotazioni</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>DelGrosso Viaggi – Prenotazioni Pullman</title>
+  <meta name="description" content="Prenotazioni pullman DelGrosso Viaggi & Limousine Bus" />
+  <meta name="theme-color" content="#0b0b0b" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="/assets/favicon.ico" />
 </head>
 
 <body>
+
+  <!-- HEADER -->
   <header class="topbar">
-    <div class="top-left">
-      <div class="brand-title">DelGrosso Viaggi</div>
-      <div class="brand-subtitle">&amp; Limousine Bus</div>
-      <div class="brand-tag">Prenotazioni Pullman</div>
+    <div class="brand">
+      <div class="brand-text">
+        <div class="brand-title">DelGrosso Viaggi</div>
+        <div class="brand-sub">&amp; Limousine Bus</div>
+        <div class="brand-mini">Prenotazioni Pullman</div>
+      </div>
+
+      <div class="brand-logo">
+        <img src="/assets/logo_150x150.png" alt="DelGrosso Viaggi" />
+      </div>
     </div>
 
-    <div class="top-center">
-      <img
-        src="./assets/logo.png"
-        alt="DelGrosso Viaggi & Limousine Bus"
-        class="logo-center"
-        width="150"
-        height="150"
-        loading="eager"
-      >
-    </div>
-
-    <div class="top-right">
-      <button id="adminBtn" class="admin-btn" type="button" aria-label="Admin">⚙️</button>
-    </div>
+    <button id="adminBtn" class="icon-btn" title="Admin">⚙️</button>
   </header>
 
+  <!-- MAIN -->
   <main class="container">
     <h1 class="page-title">Prenotazioni</h1>
 
     <div class="layout-3">
-      <!-- SINISTRA: LOCANDINE -->
-      <aside class="locandine-left">
-        <div class="locandine-title">Locandine</div>
+
+      <!-- LOCANDINE -->
+      <section class="card locandine-card">
+        <div class="card-title">Locandine</div>
         <div id="locandineGrid" class="locandine-grid"></div>
-      </aside>
+      </section>
 
-      <!-- CENTRO: FORM -->
+      <!-- FORM -->
       <section class="card center-card" id="bookingForm">
-        <h3>Dati viaggio</h3>
 
-        <label>Viaggio</label>
-        <select id="viaggio">
+        <div class="card-title">Dati viaggio</div>
+
+        <label class="lbl">Viaggio</label>
+        <select id="viaggio" class="in">
           <option value="">Seleziona…</option>
         </select>
 
-        <label>Data viaggio</label>
-        <input id="dataViaggio" type="date" />
+        <label class="lbl">Data viaggio</label>
+        <input id="dataViaggio" type="date" class="in" />
 
-        <label>Partenza</label>
-        <input id="partenza" placeholder="Es: Roma" />
+        <label class="lbl">Partenza</label>
+        <input id="partenza" type="text" class="in" placeholder="Es. Roma" />
 
-        <label>Bus</label>
-        <select id="busType">
-          <option value="GT - 53 posti">GT - 53 posti</option>
-          <option value="GT - 63 posti">GT - 63 posti</option>
+        <label class="lbl">Bus</label>
+        <select id="busType" class="in">
+          <option>GT - 53 posti</option>
+          <option>GT - 63 posti</option>
         </select>
 
-        <button id="copyLinkBtn" type="button">Copia link condivisibile</button>
+        <button id="copyLinkBtn" class="btn ghost" type="button">
+          Copia link condivisibile
+        </button>
 
-        <hr class="sep">
+        <hr class="sep"/>
 
-        <h3>Prenotazione</h3>
+        <div class="card-title">Prenotazione</div>
 
-        <label>Nome *</label>
-        <input id="nome" placeholder="Nome" />
-
-        <label>Cognome *</label>
-        <input id="cognome" placeholder="Cognome" />
-
-        <label>Telefono *</label>
-        <input id="telefono" placeholder="Es: 3331234567" inputmode="tel" />
-
-        <div class="selected-box">
-          <div class="selected-title">Posti selezionati</div>
-          <div id="selectedSeats" class="selected-seats">Nessuno</div>
-        </div>
-
-        <button id="prenotaBtn" type="button">Prenota</button>
-        <div id="msg" class="msg"></div>
-      </section>
-
-      <!-- DESTRA: PIANTINA -->
-      <section class="card right-card" id="seatSection">
-        <h3>Piantina posti</h3>
-        <div class="seat-area">
-          <div id="seatMap"></div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <!-- MODAL ADMIN -->
-  <div id="adminModal" class="modal hidden">
-    <div class="modal-card">
-      <h3>Admin</h3>
-
-      <div id="adminLoggedOut">
-        <input id="adminPass" placeholder="Password" type="password" autocomplete="current-password">
-        <button id="loginBtn" type="button">Entra</button>
-      </div>
-
-      <div id="adminLoggedIn" class="hidden">
-        <p class="ok">Modalità admin attiva ✅</p>
-
-        <h4 class="h4">Gestione tratte</h4>
-        <input id="routeName" placeholder="Nome viaggio (es: Roma - Napoli)">
-        <input id="routePartenza" placeholder="Partenza (es: Roma)">
-        <button id="addRouteBtn" type="button">Aggiungi / Aggiorna tratta</button>
-        <div id="routesList" class="routesList"></div>
-
-        <hr class="sep">
-
-        <h4 class="h4">Prenotazioni</h4>
-        <div class="rowBtns">
-          <button id="exportCsvBtn" type="button">Esporta CSV</button>
-          <button id="clearBookingsBtn" type="button">Cancella tutte</button>
-        </div>
-
-        <div class="tableWrap">
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Viaggio</th>
-                <th>Bus</th>
-                <th>Nome</th>
-                <th>Telefono</th>
-                <th>Posti</th>
-                <th>Partenza</th>
-              </tr>
-            </thead>
-            <tbody id="bookingsTableBody"></tbody>
-          </table>
-        </div>
-
-        <hr class="sep">
-
-        <h4 class="h4">Locandine</h4>
-        <input id="locTitle" placeholder="Titolo locandina">
-        <input id="locViaggio" placeholder="Viaggio (valore esatto del select)">
-        <input id="locData" placeholder="Data (YYYY-MM-DD)">
-        <input id="locPartenza" placeholder="Partenza (opzionale)">
-        <input id="locBusType" placeholder="Bus (GT - 53 posti / GT - 63 posti)">
-        <input id="locFile" type="file" accept="image/*">
-        <button id="uploadLoc" type="button">Carica locandina</button>
-
-        <div class="sep"></div>
-        <h4 class="h4">Locandine salvate</h4>
-        <div id="adminLocandineList" class="routesList"></div>
-
-        <button id="logoutBtn" type="button">Esci</button>
-      </div>
-
-      <button id="closeAdmin" class="close" type="button">Chiudi</button>
-    </div>
-  </div>
-
-  <!-- MODAL LOCANDINA FULLSCREEN -->
-  <div id="posterModal" class="modal hidden" aria-hidden="true">
-    <div class="poster-card">
-      <div class="poster-top">
-        <div id="posterTitle" class="poster-title"></div>
-        <div class="poster-actions">
-          <button id="posterUseBtn" type="button">Seleziona questo viaggio</button>
-          <button id="posterCloseBtn" class="poster-close" type="button">Chiudi</button>
-        </div>
-      </div>
-
-      <img id="posterImg" class="poster-img" alt="Locandina viaggio">
-      <div id="posterInfo" class="poster-info"></div>
-    </div>
-  </div>
-
-  <script type="module" src="./locandine.js"></script>
-  <script type="module" src="./admin.js"></script>
-  <script type="module" src="./main.js"></script>
-</body>
-</html>
+        <label class="lbl">
